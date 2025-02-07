@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import FarmerProfile,CropData
 
-# Register your models here.
+admin.site.register(FarmerProfile)
+admin.site.register(CropData)
