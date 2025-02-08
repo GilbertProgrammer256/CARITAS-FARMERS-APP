@@ -1,13 +1,30 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from .models import FarmerProfile,CropData
-from .serializers import CropDataSerializer,FarmerProfileSerializer
+from .serializers import CropDataSerializer,FarmerProfileSerializer,UserSerializer
+from rest_framework.permissions import IsAuthenticated
+
+
+
+@api_view(['POST'])
+def register_data_collector(request):
+    if request.user.role !='admin':
+        return Response({'error':'Only admin are allowed to create data collector account.'})
+    serializer=UserSerializer(data=request.data)
+    if serializer.is_valid():
+        user=serializer.save(role='data_collector')
+        return Response({'message':'Data collector account created successfully',"username":user.username,"role":user.role},status=status.HTTP_201_CREATED)
+    return Response(serializer.error,status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @api_view(['GET','POST'])
+@permission_classes([IsAuthenticated])
 def farmers_list(request):
+    if request.user.role not in ['admin','data_collector']:
+        return Response({'error':'You donot have permission to perform this action'},status=403)
     if request.method=='GET':
         farmers=FarmerProfile.objects.all()
         serializers=FarmerProfileSerializer(farmers,many=True)
@@ -21,7 +38,10 @@ def farmers_list(request):
     
     
 @api_view(['GET','PUT','DELETE'])
+@permission_classes([IsAuthenticated])
 def farmers_detail(request,pk):
+    if request.user.role not in ['admin','data_collector']:
+        return Response({'error':'You donot have permission to perform this action'},status=403)
     try:
         farmer=FarmerProfile.objects.get(pk=pk)
     except FarmerProfile.DoesNotExist:
@@ -42,7 +62,10 @@ def farmers_detail(request,pk):
 
 
 @api_view(['GET','POST'])
+@permission_classes([IsAuthenticated])
 def crop_list(request):
+    if request.user.role not in ['admin','data_collector']:
+        return Response({'error':'You donot have permission to perform this action'},status=403)
     if request.method=='GET':
         crops=CropData.objects.all()
         serializers=CropDataSerializer(crops,many=True)
@@ -55,7 +78,10 @@ def crop_list(request):
         return Response(serializers.errors,status=status.HTTP_400_BAD_REQUEST)
     
 @api_view(['GET','PUT','DELETE'])
+@permission_classes([IsAuthenticated])
 def crop_detail(request,pk):
+    if request.user.role not in ['admin','data_collector']:
+        return Response({'error':'You donot have permission to perform this action'},status=403)
     try:
         crop=CropData.objects.get(pk=pk)
     except CropData.DoesNotExist:
