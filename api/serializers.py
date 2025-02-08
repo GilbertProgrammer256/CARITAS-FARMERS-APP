@@ -5,12 +5,12 @@ from .models import FarmerProfile,CropData,User
 class FarmerProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model=FarmerProfile
-        fields='__all__'
+        fields=['id','first_name', 'last_name', 'date_of_birth', 'gender', 'phone_number', 'email', 'farm_location', 'farm_size']
 
 class CropDataSerializer(serializers.ModelSerializer):
     class Meta:
         model=CropData
-        fields='__all__'
+        fields = ['id', 'farmer', 'crop_type', 'planting_date', 'expected_yield', 'notes']
 
 
 

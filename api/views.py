@@ -15,7 +15,7 @@ def register_data_collector(request):
     serializer=UserSerializer(data=request.data)
     if serializer.is_valid():
         user=serializer.save(role='data_collector')
-        return Response({'message':'Data collector account created successfully',"username":user.username,"role":user.role},status=status.HTTP_201_CREATED)
+        return Response({"message":"Data collector account created successfully","username":user.username,"role":user.role},status=status.HTTP_201_CREATED)
     return Response(serializer.error,status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -25,14 +25,15 @@ def register_data_collector(request):
 def farmers_list(request):
     if request.user.role not in ['admin','data_collector']:
         return Response({'error':'You donot have permission to perform this action'},status=403)
+    
     if request.method=='GET':
-        farmers=FarmerProfile.objects.all()
+        farmers=FarmerProfile.objects.filter(created_by=request.user)
         serializers=FarmerProfileSerializer(farmers,many=True)
         return Response(serializers.data)
     elif request.method=='POST':
         serializers=FarmerProfileSerializer(data=request.data)
         if serializers.is_valid():
-            serializers.save()
+            serializers.save(created_by=request.user)
             return Response(serializers.data,status=status.HTTP_201_CREATED)
         return Response(serializers.errors,status=status.HTTP_400_BAD_REQUEST)
     
@@ -43,9 +44,10 @@ def farmers_detail(request,pk):
     if request.user.role not in ['admin','data_collector']:
         return Response({'error':'You donot have permission to perform this action'},status=403)
     try:
-        farmer=FarmerProfile.objects.get(pk=pk)
+        farmer=FarmerProfile.objects.get(pk=pk,created_by=request.user)
     except FarmerProfile.DoesNotExist:
         return Response({'error':'Farmer not found'},status=status.HTTP_404_NOT_FOUND)
+    
     if request.method=='GET':
         serializer=FarmerProfileSerializer(farmer)
         return Response(serializer.data)
@@ -66,14 +68,15 @@ def farmers_detail(request,pk):
 def crop_list(request):
     if request.user.role not in ['admin','data_collector']:
         return Response({'error':'You donot have permission to perform this action'},status=403)
+    
     if request.method=='GET':
-        crops=CropData.objects.all()
+        crops=CropData.objects.filter(created_by=request.user)
         serializers=CropDataSerializer(crops,many=True)
         return Response(serializers.data)
     elif request.method=='POST':
         serializers=CropDataSerializer(data=request.data)
         if serializers.is_valid():
-            serializers.save()
+            serializers.save(created_by=request.user)
             return Response(serializers.data,status=status.HTTP_201_CREATED)
         return Response(serializers.errors,status=status.HTTP_400_BAD_REQUEST)
     
@@ -83,7 +86,7 @@ def crop_detail(request,pk):
     if request.user.role not in ['admin','data_collector']:
         return Response({'error':'You donot have permission to perform this action'},status=403)
     try:
-        crop=CropData.objects.get(pk=pk)
+        crop=CropData.objects.get(pk=pk,created_by=request.user)
     except CropData.DoesNotExist:
         return Response({'error':'Crop not found'},status=status.HTTP_404_NOT_FOUND)
     if request.method=='GET':
